@@ -1,24 +1,56 @@
 import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 
 import SignUpDialog from "@/components/signup/SignUpDialog";
 import SignUpInfoInputs from "@/components/signup/SignUpInfoInputs";
 import SignUpTerms from "@/components/signup/SignUpTerms";
 
 import { setSignUpDialog } from "@/redux/signUpSlice";
+import { userService } from "@/services/userService";
 
 interface RootState {
   signUp: {
     showSignUpDialog: boolean;
+    signUpForm: {
+      id: string;
+      email: string;
+      name: string;
+      password: string;
+      phone: string;
+      termsAgreed: boolean;
+      privacyAgreed: boolean;
+      marketingAgreed: boolean;
+    };
   };
 }
 
 const SignUp: React.FC = () => {
   const dispatch = useDispatch();
-  const { showSignUpDialog } = useSelector((state: RootState) => state.signUp);
+  const { showSignUpDialog, signUpForm } = useSelector(
+    (state: RootState) => state.signUp
+  );
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    dispatch(setSignUpDialog(true));
+
+    if (!signUpForm.termsAgreed || !signUpForm.privacyAgreed) {
+      return;
+    }
+
+    try {
+      await userService.signUp({
+        id: signUpForm.id,
+        email: signUpForm.email,
+        name: signUpForm.name,
+        password: signUpForm.password,
+        phone: signUpForm.phone,
+        termsAgreed: signUpForm.termsAgreed,
+        privacyAgreed: signUpForm.privacyAgreed,
+        marketingAgreed: signUpForm.marketingAgreed,
+      });
+
+      dispatch(setSignUpDialog(true));
+    } catch (error) {}
   };
 
   return (
